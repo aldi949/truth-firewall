@@ -1,0 +1,42 @@
+{
+  "task_id": "pilot-slugify-example",
+  "task_type": "python",
+  "task": "Implement slugify(text) in slug.py. Define exactly one top-level function named slugify with one required parameter named text. Trim leading and trailing whitespace, lowercase the text, and replace each run of internal whitespace with one hyphen. Return an empty string for empty or whitespace-only input. Use only the Python standard library.",
+  "conditions": [
+    {
+      "id": "slugify_api",
+      "kind": "python_function",
+      "path": "slug.py",
+      "symbol": "slugify",
+      "parameters": ["text"]
+    },
+    {
+      "id": "trim_and_lowercase",
+      "kind": "black_box",
+      "path": "slug.py",
+      "symbol": "slugify",
+      "cases": [
+        {"args": ["  HeLLo  "], "expected": "hello"}
+      ]
+    },
+    {
+      "id": "collapse_whitespace_runs",
+      "kind": "black_box",
+      "path": "slug.py",
+      "symbol": "slugify",
+      "cases": [
+        {"args": ["Hello\t  World"], "expected": "hello-world"}
+      ]
+    },
+    {
+      "id": "empty_input",
+      "kind": "black_box",
+      "path": "slug.py",
+      "symbol": "slugify",
+      "cases": [
+        {"args": [""], "expected": ""},
+        {"args": [" \t "], "expected": ""}
+      ]
+    }
+  ]
+}

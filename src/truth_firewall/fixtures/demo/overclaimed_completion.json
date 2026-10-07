@@ -1,0 +1,40 @@
+{
+  "label": "FIXTURE",
+  "name": "overclaimed_completion",
+  "response": "The bug is fixed. All 12 tests passed.",
+  "claims": [
+    {
+      "claim_type": "completion",
+      "raw_text": "The bug is fixed.",
+      "normalized_claim": "The bug is fixed.",
+      "subject": "the bug",
+      "predicate": "is fixed",
+      "object": "bug",
+      "epistemic_status": "asserted_fact",
+      "attributes": {}
+    },
+    {
+      "claim_type": "test_result",
+      "raw_text": "All 12 tests passed.",
+      "normalized_claim": "All 12 tests passed.",
+      "subject": "tests",
+      "predicate": "passed",
+      "object": "12",
+      "epistemic_status": "asserted_fact",
+      "attributes": {"quantity": 12, "outcome": "pass", "command": "pytest"}
+    }
+  ],
+  "evidence": [
+    {
+      "evidence_id": "e-001",
+      "evidence_type": "test",
+      "trust_level": "B",
+      "source": "pytest",
+      "command": "pytest",
+      "exit_code": 0,
+      "stdout": "11 passed in 0.20s",
+      "provenance": "demo-fixture:overclaimed_completion",
+      "structured_payload": {"kind": "test_run", "passed": 11, "failed": 0}
+    }
+  ]
+}

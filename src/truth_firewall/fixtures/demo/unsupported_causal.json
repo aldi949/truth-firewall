@@ -1,0 +1,33 @@
+{
+  "label": "FIXTURE",
+  "name": "unsupported_causal",
+  "response": "The root cause is the cache invalidation layer.",
+  "claims": [
+    {
+      "claim_type": "causal",
+      "raw_text": "The root cause is the cache invalidation layer.",
+      "normalized_claim": "The root cause is the cache invalidation layer.",
+      "subject": "the root cause",
+      "predicate": "is",
+      "object": "the cache invalidation layer",
+      "epistemic_status": "asserted_fact",
+      "attributes": {"factor": "the cache invalidation layer"}
+    }
+  ],
+  "evidence": [
+    {
+      "evidence_id": "e-001",
+      "evidence_type": "filesystem",
+      "trust_level": "A",
+      "source": "filesystem",
+      "file_path": "src/cache.py",
+      "provenance": "demo-fixture:unsupported_causal",
+      "structured_payload": {
+        "kind": "snapshot",
+        "exists": true,
+        "path": "src/cache.py",
+        "excerpt": "the cache invalidation layer clears keys on write"
+      }
+    }
+  ]
+}

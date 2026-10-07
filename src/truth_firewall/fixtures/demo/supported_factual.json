@@ -1,0 +1,28 @@
+{
+  "label": "FIXTURE",
+  "name": "supported_factual",
+  "response": "README.md exists in the workspace.",
+  "claims": [
+    {
+      "claim_type": "existence",
+      "raw_text": "README.md exists in the workspace.",
+      "normalized_claim": "README.md exists in the workspace.",
+      "subject": "README.md",
+      "predicate": "exists",
+      "object": "README.md",
+      "epistemic_status": "asserted_fact",
+      "attributes": {"target_path": "README.md", "polarity": "present", "scope_kind": "workspace"}
+    }
+  ],
+  "evidence": [
+    {
+      "evidence_id": "e-001",
+      "evidence_type": "filesystem",
+      "trust_level": "A",
+      "source": "filesystem",
+      "file_path": "README.md",
+      "provenance": "demo-fixture:supported_factual",
+      "structured_payload": {"kind": "snapshot", "exists": true, "path": "README.md"}
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "label": "FIXTURE",
+  "name": "legitimate_hypothesis",
+  "response": "My current hypothesis is that the cache invalidation layer is the root cause.",
+  "claims": [
+    {
+      "claim_type": "causal",
+      "raw_text": "My current hypothesis is that the cache invalidation layer is the root cause.",
+      "normalized_claim": "My current hypothesis is that the cache invalidation layer is the root cause.",
+      "subject": "the root cause",
+      "predicate": "is",
+      "object": "the cache invalidation layer",
+      "epistemic_status": "hypothesis",
+      "modality": "hypothesis",
+      "qualifiers": ["hypothesis"],
+      "attributes": {"factor": "the cache invalidation layer"}
+    }
+  ],
+  "evidence": []
+}

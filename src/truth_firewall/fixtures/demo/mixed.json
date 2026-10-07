@@ -1,0 +1,38 @@
+{
+  "label": "FIXTURE",
+  "name": "mixed",
+  "response": "I created README.md. The file README.md exists.",
+  "claims": [
+    {
+      "claim_type": "action_change",
+      "raw_text": "I created README.md.",
+      "normalized_claim": "I created README.md.",
+      "subject": "I",
+      "predicate": "created",
+      "object": "README.md",
+      "epistemic_status": "asserted_fact",
+      "attributes": {"target_path": "README.md"}
+    },
+    {
+      "claim_type": "existence",
+      "raw_text": "The file README.md exists.",
+      "normalized_claim": "The file README.md exists.",
+      "subject": "README.md",
+      "predicate": "exists",
+      "object": "README.md",
+      "epistemic_status": "asserted_fact",
+      "attributes": {"target_path": "README.md", "polarity": "present"}
+    }
+  ],
+  "evidence": [
+    {
+      "evidence_id": "e-001",
+      "evidence_type": "filesystem",
+      "trust_level": "A",
+      "source": "filesystem",
+      "file_path": "README.md",
+      "provenance": "demo-fixture:mixed",
+      "structured_payload": {"kind": "snapshot", "exists": true, "path": "README.md"}
+    }
+  ]
+}

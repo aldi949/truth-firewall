@@ -1,0 +1,37 @@
+{
+  "label": "FIXTURE",
+  "name": "scoped_absence",
+  "response": "No retry_limit references exist in src/.",
+  "claims": [
+    {
+      "claim_type": "absence",
+      "raw_text": "No retry_limit references exist in src/.",
+      "normalized_claim": "No retry_limit references exist in src/.",
+      "subject": "retry_limit",
+      "predicate": "references exist",
+      "object": "none",
+      "scope": "src",
+      "epistemic_status": "asserted_fact",
+      "attributes": {"query": "retry_limit", "scope_kind": "path", "scope_path": "src", "polarity": "absent"}
+    }
+  ],
+  "evidence": [
+    {
+      "evidence_id": "e-001",
+      "evidence_type": "process",
+      "trust_level": "A",
+      "source": "search",
+      "command": "rg retry_limit src",
+      "exit_code": 1,
+      "stdout": "",
+      "provenance": "demo-fixture:scoped_absence",
+      "structured_payload": {
+        "kind": "search",
+        "query": "retry_limit",
+        "root": "src",
+        "match_count": 0,
+        "matches": []
+      }
+    }
+  ]
+}
