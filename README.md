@@ -1,12 +1,16 @@
 # Stop babysitting your coding agent.
 
-**Truth Firewall won’t accept `DONE` until the task is independently verified.**
+**Truth Firewall won’t accept DONE until the task is independently verified.**
 
-Give Codex a bounded Python task and write down the checks that would prove it complete. Truth Firewall runs Codex, checks its work after each attempt, and sends failed checks back for another attempt. You return to a clear result: `VERIFIED_DONE`, `HUMAN_REQUIRED`, or `ERROR`.
+Your coding agent can say a task is done while an edge case is broken, a required API is missing, or its own tests miss the real requirement. That leaves you watching every turn and checking the work yourself.
 
-**Task → Codex works → Codex says DONE → Truth Firewall verifies → `VERIFIED_DONE` / `REJECT_DONE` / `HUMAN_REQUIRED`.** `REJECT_DONE` triggers an automatic continuation within the three-attempt limit; it is not a final success result.
+Truth Firewall gives a bounded Python task to Codex and checks the result against acceptance checks you specify. When a check fails, it blocks completion and sends the failure back for another attempt. You can step away and return to a clear outcome.
 
-## First run
+**Codex works → Truth Firewall checks → `VERIFIED_DONE` / `REJECT_DONE` / `HUMAN_REQUIRED`**
+
+`REJECT_DONE` continues the same workflow automatically, up to three attempts. If completion still cannot be proven, the final result is `HUMAN_REQUIRED`. An infrastructure failure is reported as `ERROR`.
+
+## Quickstart
 
 Use Windows PowerShell with Python 3.11+, Node.js, and an installed, authenticated Codex CLI. Codex installation and sign-in are separate from this setup.
 
