@@ -55,11 +55,18 @@ def main(argv: list[str] | None = None) -> int:
     run.add_argument("--attempts", type=int, choices=(1, 2, 3), default=3,
                      help="Maximum worker attempts (default: 3)")
 
+    init = sub.add_parser("init", help="Prepare an editable task contract in the current repository.")
+    init.add_argument("--overwrite", action="store_true", help="Explicitly replace an existing task.json.")
+
     args = parser.parse_args(argv)
     if args.command == "check":
         return _check_command(args)
     if args.command == "doctor":
         return _doctor_command(args)
+    if args.command == "init":
+        from truth_firewall.onboarding import init_task
+
+        return init_task(overwrite=args.overwrite)
     if args.command == "run":
         from truth_firewall.pilot import run_pilot
 

@@ -43,19 +43,17 @@ VERIFIED_DONE    REJECT_DONE       HUMAN_REQUIRED
 Use Windows PowerShell with Python 3.11 or newer, Node.js, Git, and an installed, authenticated Codex CLI. Codex installation and sign-in are separate from this setup.
 
 ```powershell
-git clone https://github.com/aldi949/truth-firewall.git
-cd truth-firewall
-python -m venv .venv
-.\.venv\Scripts\python.exe -m pip install .
-$tfRoot = (Get-Location).Path
-Set-Location C:\path\to\your-python-repo
-New-Item -ItemType Directory -Force .truth-firewall | Out-Null
-Copy-Item "$tfRoot\examples\pilot-task.json" .\.truth-firewall\task.json
-notepad .\.truth-firewall\task.json
-& "$tfRoot\.venv\Scripts\truth-firewall.exe" run --spec .truth-firewall\task.json
+py -m pip install "git+https://github.com/aldi949/truth-firewall.git"
 ```
 
-Before the last command, edit `.truth-firewall\task.json` to describe **your** bounded Python task and every mandatory acceptance check. The copied file is a working `slugify` example, not a universal task spec. Keep the same PowerShell session so `$tfRoot` remains set. See [QUICKSTART.md](QUICKSTART.md) for more detail.
+Open PowerShell in the Python repository you want Truth Firewall to work on, then run:
+
+```powershell
+truth-firewall init
+truth-firewall run
+```
+
+`init` asks for your task text and an optional required output file. It runs locally without an LLM and validates `.truth-firewall/task.json` using the same spec loader as `run`. A supplied file creates only a file-existence starter check; leaving it blank creates a clearly marked editable template. Before `run`, review the file and add checks for **every mandatory requirement**, replacing any `EDIT_ME` placeholder. Truth Firewall cannot infer omitted requirements or guarantee that these checks completely cover your task. Existing task files are preserved unless you explicitly use `truth-firewall init --overwrite`. See [QUICKSTART.md](QUICKSTART.md) for examples and PATH troubleshooting; clone/venv development setup is in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 The supported checks are `file_exists` (a repository-relative path exists or does not exist), `python_function` (a top-level function has the exact parameter list), and `black_box` (JSON argument lists produce expected return values). Give each condition a unique `id`. Every listed condition is mandatory, and requirements missing from `task.json` cannot be verified.
 

@@ -4,7 +4,11 @@ Truth Firewall is an early Windows pilot for bounded local Python tasks. Keep or
 
 ## Local checks
 
+For development, clone the source and use a virtual environment. Normal users can install directly with pip as shown in [QUICKSTART.md](QUICKSTART.md).
+
 ```powershell
+git clone https://github.com/aldi949/truth-firewall.git
+cd truth-firewall
 python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -e ".[dev]"
 .\.venv\Scripts\python.exe -m pytest
