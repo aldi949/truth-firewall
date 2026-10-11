@@ -50,10 +50,16 @@ Open PowerShell in the Python repository you want Truth Firewall to work on, the
 
 ```powershell
 truth-firewall init
+notepad .\.truth-firewall\task.json
+truth-firewall activate
 truth-firewall run
 ```
 
-`init` asks for your task text and an optional required output file. It runs locally without an LLM and validates `.truth-firewall/task.json` using the same spec loader as `run`. A supplied file creates only a file-existence starter check; leaving it blank creates a clearly marked editable template. Before `run`, review the file and add checks for **every mandatory requirement**, replacing any `EDIT_ME` placeholder. Truth Firewall cannot infer omitted requirements or guarantee that these checks completely cover your task. Existing task files are preserved unless you explicitly use `truth-firewall init --overwrite`. See [QUICKSTART.md](QUICKSTART.md) for examples and PATH troubleshooting; clone/venv development setup is in [CONTRIBUTING.md](CONTRIBUTING.md).
+`init` asks for your task text and an optional required output file. It runs locally without an LLM and validates `.truth-firewall/task.json` using the same spec loader as `run`. A supplied file creates only a file-existence starter check; leaving it blank creates a clearly marked editable template. Both remain unreviewed and cannot authorize completion. Review the file and add checks for **every mandatory requirement**, replacing any `EDIT_ME` placeholder, then explicitly confirm with `truth-firewall activate`. An unreviewed spec stops before Codex starts. Truth Firewall cannot infer omitted requirements or guarantee that review makes the checks complete. Existing task files are preserved unless you explicitly use `truth-firewall init --overwrite`. Existing manually authored `--spec` contracts remain supported; an `EDIT_ME` placeholder always blocks completion. The verifier cannot infer from arbitrary task prose that a check targets the intended source file, so inspect paths carefully. See [QUICKSTART.md](QUICKSTART.md) for examples and PATH troubleshooting; clone/venv development setup is in [CONTRIBUTING.md](CONTRIBUTING.md).
+
+Activation records a SHA-256 digest of the reviewed task and checks. If you edit the task or checks afterward, `run` returns `HUMAN_REQUIRED` before Codex starts; review the changed contract and run `truth-firewall activate` again. The digest detects ordinary edits, not deliberate rewriting of both the contract and its digest by someone with access to your files.
+
+Legacy manually authored specs remain accepted without review metadata. If both `acceptance_review` and `onboarding_note` are removed from a generated concrete starter, it becomes indistinguishable from a legacy spec; keep those fields and use `activate` after reviewing the checks.
 
 The supported checks are `file_exists` (a repository-relative path exists or does not exist), `python_function` (a top-level function has the exact parameter list), and `black_box` (JSON argument lists produce expected return values). Give each condition a unique `id`. Every listed condition is mandatory, and requirements missing from `task.json` cannot be verified.
 

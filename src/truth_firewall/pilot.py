@@ -10,7 +10,7 @@ import tempfile
 from pathlib import Path
 from uuid import uuid4
 
-from truth_firewall.completion import AcceptanceCondition, TaskCompletionContract
+from truth_firewall.completion import AcceptanceCondition, TaskCompletionContract, acceptance_content_digest
 from truth_firewall.lifecycle import AttemptRecord, TaskRun, TerminalOutcome, run_supervised_task
 from truth_firewall.supervised_worker import WorkerProcessSpec
 
@@ -74,7 +74,14 @@ def _load_spec(path: Path) -> tuple[dict, TaskCompletionContract]:
             cases = tuple(parsed_cases)
         conditions.append(AcceptanceCondition(condition_id, kind, file_path, symbol, expected, cases, True))
 
-    contract = TaskCompletionContract(task_id, task, tuple(conditions))
+    review = data.get("acceptance_review")
+    if review is None:
+        note = data.get("onboarding_note", "")
+        review = ("unreviewed" if isinstance(note, str) and note.startswith(
+            ("EDITABLE TEMPLATE:", "STARTER CHECK ONLY:")) else "legacy")
+    contract = TaskCompletionContract(task_id, task, tuple(conditions), review,
+                                      data.get("acceptance_digest"),
+                                      acceptance_content_digest(data) if review == "reviewed" else None)
     return data, contract
 
 
@@ -127,6 +134,23 @@ def _write_summary(path: Path, *, run_id: str, task_type: str, outcome: str,
     }, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
 
+def _review_required(summary_path: Path, *, run_id: str, task_type: str, mandatory: int,
+                     gaps: tuple[str, ...], spec_path: Path, spec_value: str,
+                     reason: str) -> int:
+    _write_summary(summary_path, run_id=run_id, task_type=task_type,
+                   outcome="HUMAN_REQUIRED", attempts=0, mandatory=mandatory,
+                   rejects=0, continued=False, human_reason=reason, error_category=None)
+    print("\nHUMAN_REQUIRED")
+    print("Acceptance contract is not ready; Codex was not started.")
+    for gap in gaps:
+        print(f"- {gap}")
+    print(f"Review the original task and every mandatory check in {spec_path}, "
+          f"then run truth-firewall activate --spec {spec_value}")
+    print("Explicit review does not prove that omitted requirements are covered.")
+    print(f"Local run summary: {summary_path}")
+    return 2
+
+
 def _print_result(run: TaskRun, contract: TaskCompletionContract, summary_path: Path) -> int:
     display_outcome = "ERROR" if run.terminal_outcome in {TerminalOutcome.ERROR, TerminalOutcome.TIMEOUT} else run.terminal_outcome.value
     print(f"\n{display_outcome}")
@@ -170,8 +194,31 @@ def run_pilot(spec_value: str, *, attempts: int = 3) -> int:
         spec_path = Path(spec_value)
         if not spec_path.is_absolute():
             spec_path = root / spec_path
-        data, contract = _load_spec(spec_path.resolve(strict=True))
+        spec_path = spec_path.resolve(strict=True)
+        raw = json.loads(spec_path.read_text(encoding="utf-8"))
+        if isinstance(raw, dict) and raw.get("acceptance_review") == "reviewed":
+            try:
+                review_valid = raw.get("acceptance_digest") == acceptance_content_digest(raw)
+            except (TypeError, ValueError):
+                review_valid = False
+            if not review_valid:
+                rows = raw.get("conditions")
+                return _review_required(
+                    summary_path, run_id=run_id, task_type=str(raw.get("task_type", "python")),
+                    mandatory=len(rows) if isinstance(rows, list) else 0,
+                    gaps=("acceptance review is invalid because the task or checks changed; "
+                          "review and activate again",), spec_path=spec_path,
+                    spec_value=spec_value, reason="acceptance_review_invalid")
+        data, contract = _load_spec(spec_path)
         task_type = data.get("task_type", "python")
+        gaps = contract.readiness_gaps()
+        if gaps:
+            return _review_required(
+                summary_path, run_id=run_id, task_type=task_type,
+                mandatory=len(contract.conditions), gaps=gaps, spec_path=spec_path,
+                spec_value=spec_value,
+                reason=("acceptance_review_invalid" if contract.acceptance_review == "reviewed"
+                        else "acceptance_contract_unreviewed"))
         node = shutil.which("node.exe") or shutil.which("node")
         if not node:
             raise RuntimeError("Node.js was not found on PATH; install/configure Codex CLI first")

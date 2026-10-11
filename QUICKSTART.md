@@ -12,6 +12,8 @@ Open PowerShell in the Python repository you want Truth Firewall to work on, the
 
 ```powershell
 truth-firewall init
+notepad .\.truth-firewall\task.json
+truth-firewall activate
 truth-firewall run
 ```
 
@@ -19,7 +21,7 @@ truth-firewall run
 
 Run `init` from the root of a disposable or nonsensitive local Python repository. It asks for your task text and optionally a repository-relative output file that your task must create. It is deterministic, local, and needs no LLM or API key. It validates the generated JSON through the existing task/spec loader before reporting success.
 
-A supplied path creates a `file_exists` starter check only. Leaving the path blank creates a valid, explicitly marked editable template with `EDIT_ME_required_output.py` as a placeholder. **Replace that placeholder before running.** Neither option infers behavior or guarantees full coverage. Open the contract to review and extend it before the final `run` command:
+A supplied path creates a `file_exists` starter check only. Leaving the path blank creates a valid, explicitly marked editable template with `EDIT_ME_required_output.py` as a placeholder. **Replace that placeholder before activation.** Both starter forms are unreviewed and cannot authorize completion. Neither option infers behavior or guarantees full coverage. Open the contract to review and extend it before activation:
 
 ```powershell
 notepad .\.truth-firewall\task.json
@@ -41,17 +43,22 @@ For example, if your task is specifically to implement `add_one(value)` in `app.
 ]
 ```
 
-All listed conditions are mandatory. Truth Firewall cannot infer requirements omitted from the file, and generated checks do not guarantee complete task coverage. If the supported checks cannot establish your task's requirements, do not treat the result as proof of completion. `init` refuses to overwrite an existing contract; use `truth-firewall init --overwrite` only when you intend to replace it.
+All listed conditions are mandatory. Truth Firewall cannot infer requirements omitted from the file, and explicit review does not guarantee complete task coverage. If the supported checks cannot establish your task's requirements, do not treat the result as proof of completion. Check that every condition points to the intended file: the verifier cannot soundly match paths against arbitrary natural-language task text. `init` refuses to overwrite an existing contract; use `truth-firewall init --overwrite` only when you intend to replace it.
 
 ## Run
 
-From the task repository after reviewing the contract:
+From the task repository after reviewing and editing the contract, confirm the displayed task and checks, then run:
 
 ```powershell
+truth-firewall activate
 truth-firewall run
 ```
 
-The default spec is `.truth-firewall/task.json`. Explicit paths still work exactly as before: `truth-firewall run --spec path\to\task.json`.
+The default spec is `.truth-firewall/task.json`. For a generated contract at another path, use `truth-firewall activate --spec path\to\task.json`. Existing manually authored contracts remain usable with `truth-firewall run --spec path\to\task.json`; generated contracts require activation. An unreviewed starter returns `HUMAN_REQUIRED` before launching Codex, even if its file-existence check would pass. An `EDIT_ME` placeholder cannot authorize `VERIFIED_DONE`.
+
+Activation stores a digest of the task and acceptance checks you reviewed. After changing either, review the file and run `truth-firewall activate` again before `run`; a changed reviewed contract returns `HUMAN_REQUIRED` without launching Codex. This detects ordinary edits, but the digest is not an authenticated signature against someone who can rewrite both it and the contract.
+
+Keep the generated `acceptance_review` and `onboarding_note` fields. Removing both from a concrete starter makes it indistinguishable from an older manually authored spec, which remains accepted for compatibility. Review and activate the generated contract instead.
 
 Truth Firewall runs Codex, verifies the checks after each attempt, and automatically continues after `REJECT_DONE`, up to three attempts. The final result is:
 
@@ -67,4 +74,4 @@ This Windows pilot uses a local Python repository, Codex CLI, bounded tasks, and
 
 ## If the command is not found
 
-The Python installation's Scripts directory must be on your Windows user PATH for `truth-firewall` to work. Add that directory and reopen PowerShell. You can also invoke the installed package with `py -m truth_firewall init` and `py -m truth_firewall run` using the same Python that performed the install. Use `py -3.11` (or another installed supported version) consistently if the default launcher selects an older Python. Developer clone/venv instructions are in [CONTRIBUTING.md](CONTRIBUTING.md).
+The Python installation's Scripts directory must be on your Windows user PATH for `truth-firewall` to work. Add that directory and reopen PowerShell. You can also invoke the installed package with `py -m truth_firewall init`, `py -m truth_firewall activate`, and `py -m truth_firewall run` using the same Python that performed the install. Use `py -3.11` (or another installed supported version) consistently if the default launcher selects an older Python. Developer clone/venv instructions are in [CONTRIBUTING.md](CONTRIBUTING.md).

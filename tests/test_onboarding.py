@@ -28,7 +28,7 @@ def test_init_creates_valid_task_in_current_repository(tmp_path, monkeypatch, ca
     assert "file existence does not verify behavior or all requirements" in output
     assert "Created .truth-firewall/task.json" in output
     assert "Review every mandatory requirement before running." in output
-    assert "Next: truth-firewall run" in output
+    assert "Next: edit the checks, then truth-firewall activate" in output
 
 
 def test_init_does_not_silently_overwrite(tmp_path, monkeypatch, capsys):

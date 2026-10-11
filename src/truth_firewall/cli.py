@@ -58,6 +58,10 @@ def main(argv: list[str] | None = None) -> int:
     init = sub.add_parser("init", help="Prepare an editable task contract in the current repository.")
     init.add_argument("--overwrite", action="store_true", help="Explicitly replace an existing task.json.")
 
+    activate = sub.add_parser("activate", help="Review and activate an init-generated acceptance contract.")
+    activate.add_argument("--spec", default=".truth-firewall/task.json",
+                          help="Contract to review (default: .truth-firewall/task.json)")
+
     args = parser.parse_args(argv)
     if args.command == "check":
         return _check_command(args)
@@ -67,6 +71,10 @@ def main(argv: list[str] | None = None) -> int:
         from truth_firewall.onboarding import init_task
 
         return init_task(overwrite=args.overwrite)
+    if args.command == "activate":
+        from truth_firewall.onboarding import activate_task
+
+        return activate_task(args.spec)
     if args.command == "run":
         from truth_firewall.pilot import run_pilot
 

@@ -7,6 +7,7 @@ is executed only for explicitly requested black-box cases (without a sandbox).
 from __future__ import annotations
 
 import ast
+import hashlib
 import json
 import subprocess
 import sys
@@ -31,6 +32,15 @@ class CompletionDecision(str, Enum):
     HUMAN_REQUIRED = "HUMAN_REQUIRED"
 
 
+def acceptance_content_digest(data: dict[str, Any]) -> str:
+    """Hash the exact reviewable JSON content, excluding only review metadata."""
+    content = {key: value for key, value in data.items()
+               if key not in {"acceptance_review", "acceptance_digest"}}
+    canonical = json.dumps(content, ensure_ascii=False, sort_keys=True,
+                           separators=(",", ":"), allow_nan=False)
+    return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+
+
 @dataclass(frozen=True)
 class AcceptanceCondition:
     condition_id: str
@@ -47,6 +57,9 @@ class TaskCompletionContract:
     task_id: str
     original_task: str
     conditions: tuple[AcceptanceCondition, ...]
+    acceptance_review: str = "legacy"
+    acceptance_digest: str | None = None
+    current_content_digest: str | None = None
 
     def __post_init__(self) -> None:
         if not self.task_id or not self.original_task or not self.conditions:
@@ -56,6 +69,21 @@ class TaskCompletionContract:
             raise ValueError("condition IDs must be nonempty and unique")
         if not any(condition.mandatory for condition in self.conditions):
             raise ValueError("at least one mandatory condition is required")
+        if self.acceptance_review not in {"legacy", "unreviewed", "reviewed"}:
+            raise ValueError("acceptance_review must be legacy, unreviewed, or reviewed")
+
+    def readiness_gaps(self) -> tuple[str, ...]:
+        gaps = []
+        if self.acceptance_review == "unreviewed":
+            gaps.append("starter acceptance checks have not been explicitly reviewed and activated")
+        elif self.acceptance_review == "reviewed" and (
+                not isinstance(self.acceptance_digest, str)
+                or self.acceptance_digest != self.current_content_digest):
+            gaps.append("acceptance review is invalid because the task or checks changed; review and activate again")
+        if any("EDIT_ME" in value.upper() for condition in self.conditions
+               for value in (condition.condition_id, condition.path, condition.symbol)):
+            gaps.append("replace every EDIT_ME acceptance-check placeholder")
+        return tuple(gaps)
 
 
 @dataclass(frozen=True)
@@ -111,6 +139,9 @@ class TaskCompletionVerifier:
         self.contract = contract
 
     def attempt_done(self, worker_response: str) -> CompletionAttempt:
+        if self.contract.readiness_gaps():
+            return CompletionAttempt(self.contract, worker_response, (),
+                                     CompletionDecision.HUMAN_REQUIRED, None)
         before = workspace_snapshot(self.root)
         observations = [self._observe(condition) for condition in self.contract.conditions]
         after = workspace_snapshot(self.root)
