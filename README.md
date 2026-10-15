@@ -38,13 +38,34 @@ VERIFIED_DONE    REJECT_DONE       HUMAN_REQUIRED
               Codex keeps working
 ```
 
-## Quickstart: try it in 5 minutes
+## Install the package
 
-Use Windows PowerShell with Python 3.11 or newer, Node.js, Git, and an installed, authenticated Codex CLI. Codex installation and sign-in are separate from this setup.
+**Planned PyPI command — not published or verified from PyPI yet:**
 
 ```powershell
-py -m pip install "git+https://github.com/aldi949/truth-firewall.git"
+pipx install truth-firewall
 ```
+
+Have **Python 3.11+ and pipx** installed first. On Windows, you can install pipx with `py -3.11 -m pip install --user pipx`, run `py -3.11 -m pipx ensurepath`, and reopen PowerShell. Use an installed supported Python version in those commands. Installing Truth Firewall does not install Python, pipx, Node.js, or Codex, and does not sign you into Codex.
+
+Until PyPI publication, use Git plus the reviewed GitHub revision, or install a locally built wheel:
+
+```powershell
+pipx install "git+https://github.com/aldi949/truth-firewall.git@95d0fc00de59134527af979de6f07eda1bd65d8a"
+# Local release candidate, after building/downloading the actual artifact:
+pipx install .\truth_firewall-0.1.0-py3-none-any.whl
+truth-firewall --help
+truth-firewall --version
+truth-firewall demo
+```
+
+The offline demo needs no Codex account and explicitly labels its fixtures as demonstrations, not live accuracy. Package installation is isolated by pipx; the real task runner is currently a **Windows pilot**. See [QUICKSTART.md](QUICKSTART.md) for setup and [publication gates](docs/PUBLISHING.md) for the unpublished candidate. Do not use the planned PyPI command until a release has been published and verified to belong to this repository.
+
+## First-time Codex setup
+
+Real tasks require Node.js and an installed, authenticated Codex CLI for the same Windows user. Install those separately using the [Codex CLI instructions](https://developers.openai.com/codex/cli). Verify `node --version`, `codex --version`, and `codex login status`; sign in with `codex login` if necessary. Truth Firewall's pilot expects the npm Codex JavaScript entry point under the current user's `%APPDATA%\npm\node_modules\@openai\codex\bin\codex.js`. Nonstandard installations can set `TRUTH_FIREWALL_CODEX_JS` to their actual `codex.js` path. Codex may require an eligible account or API billing; pipx installation does not provide authentication or credits.
+
+## Run a bounded Python task
 
 Open PowerShell in the Python repository you want Truth Firewall to work on, then run:
 
