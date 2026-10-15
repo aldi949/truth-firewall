@@ -26,7 +26,7 @@ def check(wheel: Path, work: Path, upgrade_wheel: Path | None) -> dict:
     work = work.resolve()
     env = {**os.environ, "PIPX_HOME": str(work / "pipx home"), "PIPX_BIN_DIR": str(work / "bin"),
            "PIPX_MAN_DIR": str(work / "man"), "PIPX_DEFAULT_PYTHON": sys.executable,
-           "PYTHONIOENCODING": "utf-8"}
+           "PYTHONIOENCODING": "utf-8", "PYTHONUTF8": "1"}
     env.pop("PYTHONPATH", None)
     observations = []
 

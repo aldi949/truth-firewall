@@ -103,3 +103,5 @@ This Windows pilot uses a local Python repository, Codex CLI, bounded tasks, and
 ## If the command is not found
 
 Run `pipx ensurepath`, reopen PowerShell, and check `pipx list`. pipx installs the CLI in its own environment; your system `py -m truth_firewall` is not expected to see a pipx-installed package. If multiple Python versions are installed, use `pipx install --python 3.11 ...` (or another supported version) to choose one. Developer clone/venv instructions are in [CONTRIBUTING.md](CONTRIBUTING.md).
+
+If pipx on Python 3.11 reports a `UnicodeEncodeError` while creating an environment in a non-ASCII path, set `$env:PYTHONUTF8 = "1"` in PowerShell and retry the installation. This controls Python's file encoding for pipx; it does not change Truth Firewall's acceptance checks.

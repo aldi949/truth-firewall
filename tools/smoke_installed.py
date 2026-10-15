@@ -14,7 +14,8 @@ from pathlib import Path
 
 def smoke(executable: Path, python: Path, work: Path, real_codex: bool) -> dict:
     work.mkdir(parents=True, exist_ok=False)
-    executable, python, work = executable.resolve(), python.resolve(), work.resolve()
+    # Preserve a virtualenv interpreter symlink: resolving it selects the base environment on POSIX.
+    executable, python, work = executable.absolute(), python.absolute(), work.resolve()
     observations = []
     environment = dict(os.environ)
     environment.pop("PYTHONPATH", None)
