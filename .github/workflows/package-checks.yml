@@ -32,6 +32,7 @@ jobs:
       - name: Build wheel and sdist
         run: python -m build
       - name: Validate metadata and archive contents
+        shell: bash
         run: |
           python -m twine check --strict dist/*
           python tools/check_dist.py dist
@@ -45,11 +46,14 @@ jobs:
         run: |
           $sdist = (Get-ChildItem dist/*.tar.gz).FullName
           python -m pip wheel --no-deps "$sdist" --wheel-dir "${{ runner.temp }}/rebuilt"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python -m venv "${{ runner.temp }}/installed"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           $py = if ($IsWindows) { "${{ runner.temp }}/installed/Scripts/python.exe" } else { "${{ runner.temp }}/installed/bin/python" }
           $exe = if ($IsWindows) { "${{ runner.temp }}/installed/Scripts/truth-firewall.exe" } else { "${{ runner.temp }}/installed/bin/truth-firewall" }
           $wheel = (Get-ChildItem "${{ runner.temp }}/rebuilt/*.whl").FullName
           & $py -m pip install --no-deps --no-index "$wheel"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python tools/smoke_installed.py --exe "$exe" --python "$py" --work "${{ runner.temp }}/sdist-smoke"
       - name: Downloadable candidate distributions
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
