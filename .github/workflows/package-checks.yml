@@ -39,7 +39,7 @@ jobs:
         shell: pwsh
         run: |
           $wheel = (Get-ChildItem dist/*.whl).FullName
-          python tools/check_pipx.py --wheel "$wheel" --work "${{ runner.temp }}/Truth Firewall-安装"
+          python tools/check_pipx.py --wheel "$wheel" --work "${{ runner.temp }}/tf-pipx"
       - name: Rebuild and install sdist outside the source tree
         shell: pwsh
         run: |

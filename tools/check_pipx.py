@@ -52,7 +52,7 @@ def check(wheel: Path, work: Path, upgrade_wheel: Path | None) -> dict:
     version(wanted)
     pipx("installed-metadata", "list", "--json")
     smoke = subprocess.run([sys.executable, str(Path(__file__).with_name("smoke_installed.py")),
-                            "--exe", str(exe), "--python", str(app_python), "--work", str(work / "smoke")],
+                            "--exe", str(exe), "--python", str(app_python), "--work", str(work / "安装 smoke")],
                            cwd=work, env=env, capture_output=True, text=True, encoding="utf-8", timeout=180)
     (work / "smoke.log").write_text(smoke.stdout + smoke.stderr, encoding="utf-8")
     assert smoke.returncode == 0, smoke.stdout + smoke.stderr

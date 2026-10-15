@@ -31,7 +31,10 @@ The check directory must be new. `check_pipx.py` uses private pipx paths, launch
 the installed executable outside the repository, checks all seven bundled demo
 fixtures, completion controls, review invalidation, and missing-runtime errors,
 then tests reinstall, same-artifact upgrade, and uninstall. It does not modify
-the user's normal pipx installation or PATH. An optional `--upgrade-wheel` can
+the user's normal pipx installation or PATH. Hosted checks keep pipx storage ASCII
+because pipx's shared-library path handling on Windows Python 3.11 failed in a
+non-ASCII storage path; installed CLI checks still run in non-ASCII project paths.
+See QUICKSTART for the explicit storage workaround. An optional `--upgrade-wheel` can
 test a later locally built version via a local-only package resolver. Such a
 test-only version must never be published as the release candidate.
 
