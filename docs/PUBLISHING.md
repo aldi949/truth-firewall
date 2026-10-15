@@ -1,4 +1,4 @@
-# Publication checklist (no publication is configured)
+# Publication checklist (manual publication only)
 
 The initial candidate is `truth-firewall` version `0.1.0`, from
 `https://github.com/aldi949/truth-firewall`. The currently published GitHub baseline
@@ -57,23 +57,32 @@ the installed verifier directly and are **not** a real end-to-end Codex run.
 
 ## Deliberate Trusted Publishing setup
 
-No active publishing workflow is included. After explicit publication approval:
+The prepared `.github/workflows/publish-pypi.yml` has only a manual dispatch
+trigger; adding or merging it does not publish a package. Before enabling it on
+main, verify the `pypi` environment's approval protections and branch restriction.
+Pending-publisher setup requires the PyPI owner's authenticated account. No PyPI
+publisher configuration is implied by the presence of this workflow.
+
+After explicit setup approval, and before a separately authorized publication:
 
 1. Recheck the name and the exact approved source revision and artifacts. Require
    all local gates and hosted Windows checks for that revision to pass.
 2. Create a GitHub environment named `pypi`, with required reviewers, prevention
    of self-approval where available, and deployment restricted to the approved
    release branch/tags. Verify the protection actually applies to this repository.
+   With self-review prevented, an owner-triggered run needs a different trusted
+   reviewer. Choose that reviewer explicitly; do not disable protection or invent
+   a reviewer to make a single-owner deployment proceed.
 3. In the PyPI owner's account, add a **pending Trusted Publisher** with project
    `truth-firewall`, owner `aldi949`, repository `truth-firewall`, workflow filename
    `publish-pypi.yml`, and environment `pypi`. A pending publisher does not reserve
    the name. Do not put an API token in this repository.
-4. Only after authorization, create `.github/workflows/publish-pypi.yml` from the
-   configuration below. Keep it manual-only, with a protected publish environment.
+4. Only after authorization and verified environment protection, merge the
+   prepared `.github/workflows/publish-pypi.yml`. Keep it manual-only.
    Do not add push, tag, release, or pull-request publication triggers.
 
-This inactive example uses official actions pinned to revisions inspected during
-preparation. Review those revisions again before enabling publication:
+The prepared workflow uses the following official actions pinned to revisions
+inspected during preparation. Review those revisions again before publication:
 
 ```yaml
 name: Deliberate PyPI publication
@@ -125,8 +134,8 @@ jobs:
       - uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33
 ```
 
-This is documentation, not an enabled workflow. Confirm required environment
-approval and approve the exact commit before enabling it. See
+Do not dispatch the workflow until publication is explicitly authorized. Confirm
+required environment approval and approve the exact source commit first. See
 [PyPI's pending-publisher instructions](https://docs.pypi.org/trusted-publishers/creating-a-project-through-oidc/)
 and [environment restrictions](https://docs.pypi.org/trusted-publishers/adding-a-publisher/).
 
