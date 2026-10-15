@@ -1,12 +1,40 @@
 # Quickstart: local Python task with Codex
 
-Use **Windows PowerShell**. Have Python 3.11 or newer, Node.js, Git, and an installed, authenticated Codex CLI available for the current Windows user. Codex installation and authentication time are outside this quickstart.
+Use **Windows PowerShell** for real tasks. Package installation and Codex setup are separate.
 
-## Install
+## Package installation
+
+**Planned command after PyPI publication — not currently a verified public PyPI install:**
 
 ```powershell
-py -m pip install "git+https://github.com/aldi949/truth-firewall.git"
+pipx install truth-firewall
 ```
+
+Prerequisites: Python 3.11+ and pipx on PATH. Installing the package supplies neither Python nor pipx. If needed, install pipx with `py -3.11 -m pip install --user pipx`, run `py -3.11 -m pipx ensurepath`, and reopen PowerShell. Substitute your installed supported Python version. Check `pipx --version` before continuing.
+
+Before publication, the available GitHub installation requires Git and uses the reviewed published commit:
+
+```powershell
+pipx install "git+https://github.com/aldi949/truth-firewall.git@95d0fc00de59134527af979de6f07eda1bd65d8a"
+```
+
+For a locally built candidate wheel instead, use `pipx install .\truth_firewall-0.1.0-py3-none-any.whl`. These are actual source/artifact installs, not proof that `pipx install truth-firewall` resolves to this project on PyPI. Publication instructions and gates are in [docs/PUBLISHING.md](docs/PUBLISHING.md).
+
+From any working directory, check the installed executable:
+
+```powershell
+truth-firewall --help
+truth-firewall --version
+truth-firewall demo
+```
+
+The offline demo uses bundled fixtures and labels them **NOT LIVE PRODUCT ACCURACY**. It needs no Node.js or Codex authentication. pipx upgrade and uninstall commands after publication are `pipx upgrade truth-firewall` and `pipx uninstall truth-firewall`. For a newer local wheel, use `pipx install --force .\path\to\new.whl`; `pipx upgrade` of a wheel-pinned installation does not switch it to PyPI.
+
+## First-time Codex setup
+
+Install Node.js and Codex CLI separately for the current Windows user, following the [official Codex CLI instructions](https://developers.openai.com/codex/cli). Confirm `node --version` and `codex --version`, then run `codex login` and check `codex login status`. You need valid Codex authentication; installing Truth Firewall does not configure an account, provide credits, install Node.js, or install Codex.
+
+The pilot expects the npm Codex entry point at `%APPDATA%\npm\node_modules\@openai\codex\bin\codex.js`. For another installation layout, set `TRUTH_FIREWALL_CODEX_JS` to the real `codex.js` path. If Node.js or that entry point is missing, a reviewed task reports a setup `ERROR`; an unreviewed contract still blocks before attempting a worker. Runtime support beyond Windows is not claimed by this pilot.
 
 Open PowerShell in the Python repository you want Truth Firewall to work on, then run:
 
@@ -74,4 +102,4 @@ This Windows pilot uses a local Python repository, Codex CLI, bounded tasks, and
 
 ## If the command is not found
 
-The Python installation's Scripts directory must be on your Windows user PATH for `truth-firewall` to work. Add that directory and reopen PowerShell. You can also invoke the installed package with `py -m truth_firewall init`, `py -m truth_firewall activate`, and `py -m truth_firewall run` using the same Python that performed the install. Use `py -3.11` (or another installed supported version) consistently if the default launcher selects an older Python. Developer clone/venv instructions are in [CONTRIBUTING.md](CONTRIBUTING.md).
+Run `pipx ensurepath`, reopen PowerShell, and check `pipx list`. pipx installs the CLI in its own environment; your system `py -m truth_firewall` is not expected to see a pipx-installed package. If multiple Python versions are installed, use `pipx install --python 3.11 ...` (or another supported version) to choose one. Developer clone/venv instructions are in [CONTRIBUTING.md](CONTRIBUTING.md).

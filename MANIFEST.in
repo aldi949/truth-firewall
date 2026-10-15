@@ -1,0 +1,11 @@
+include LICENSE README.md QUICKSTART.md CONTRIBUTING.md PILOT_FEEDBACK.md
+recursive-include docs *.md
+recursive-include tools *.py
+recursive-include tests *.py
+recursive-include src/truth_firewall *.py *.json py.typed
+global-exclude *.py[cod] .env .env.* *.pem *.key *.pfx
+prune .github
+prune .pytest_cache
+prune build
+prune dist
+prune artifacts
