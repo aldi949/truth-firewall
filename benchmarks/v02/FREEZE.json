@@ -1,0 +1,8 @@
+{
+  "baseline": "cadbcc676887e48a2520c02a1582bdb700d1ada4",
+  "files": {
+    "benchmarks/v02/cases.json": "8230058c70fc6ed395fff5f6f84b8acee18c0a2483cf228ed08c2a3016ba3ae9",
+    "tools/run_adversarial.py": "bcb35684cbd42596c1c0e7e5e7cc46eb0fbbb56b0d41304a5a800a9343e82a95"
+  },
+  "phase": "frozen before verifier changes; development set, not blind holdout"
+}

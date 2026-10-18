@@ -2,22 +2,22 @@
 
 from __future__ import annotations
 
-import json
 import hashlib
+import json
 import os
-import signal
+import re
 import subprocess
-import sys
 import tempfile
 import threading
 import time
 from dataclasses import asdict, dataclass
 from enum import Enum
 from pathlib import Path
-from typing import Mapping, Sequence
+from typing import Mapping
 from uuid import uuid4
 
 from truth_firewall.evidence.provenance import workspace_snapshot
+from truth_firewall.platform_runtime import process_group_options, terminate_process_tree
 
 
 class WorkerProcessStatus(str, Enum):
@@ -40,8 +40,8 @@ class WorkerProcessSpec:
     def __post_init__(self) -> None:
         if not self.command or any(not isinstance(arg, str) or not arg for arg in self.command):
             raise ValueError("worker command must contain nonempty arguments")
-        python_names = {"python", "python.exe", "python3", "python3.exe"}
-        if (len(self.command) != 3 or Path(self.command[0]).name.lower() not in python_names
+        python_name = re.fullmatch(r"python(?:3(?:\.\d+)?)?(?:\.exe)?", Path(self.command[0]).name.lower())
+        if (len(self.command) != 3 or python_name is None
                 or self.command[1] != "-I" or Path(self.command[2]).suffix.lower() != ".py"):
             raise ValueError("worker must be a single isolated Python script invocation")
         if self.timeout_seconds <= 0:
@@ -119,40 +119,8 @@ def _artifact_directory(workspace: Path, artifact_root: Path | None, task_run_id
     return directory
 
 
-def _terminate_process(process: subprocess.Popen[bytes]) -> bool:
-    if process.poll() is not None:
-        return True
-    if os.name == "nt":
-        # taskkill is available on supported Windows hosts and requests tree
-        # termination. This is best-effort process cleanup, not containment.
-        try:
-            subprocess.run(["taskkill", "/PID", str(process.pid), "/T", "/F"],
-                           stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
-                           stderr=subprocess.DEVNULL, timeout=3, check=False)
-        except (OSError, subprocess.TimeoutExpired):
-            pass
-        try:
-            process.wait(timeout=1)
-        except subprocess.TimeoutExpired:
-            process.kill()
-    else:
-        try:
-            os.killpg(process.pid, signal.SIGTERM)
-        except OSError:
-            process.terminate()
-        try:
-            process.wait(timeout=0.5)
-        except subprocess.TimeoutExpired:
-            try:
-                os.killpg(process.pid, signal.SIGKILL)
-            except OSError:
-                process.kill()
-    try:
-        process.wait(timeout=2)
-    except subprocess.TimeoutExpired:
-        process.kill()
-        process.wait()
-    return process.poll() is not None
+# Retain the internal name for callers/tests while sharing platform cleanup.
+_terminate_process = terminate_process_tree
 
 
 def _continuation_payload(continuation) -> dict | None:
@@ -218,11 +186,10 @@ def run_worker_process(
     declared_status: str | None = None
     pid: int | None = None
     try:
-        creationflags = subprocess.CREATE_NEW_PROCESS_GROUP if os.name == "nt" else 0
         process = subprocess.Popen(
             list(spec.command), cwd=root, env=_minimal_environment(spec.environment),
             stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-            creationflags=creationflags, start_new_session=(os.name != "nt"),
+            **process_group_options(),
         )
         pid = process.pid
         stdout_capture.stream = process.stdout
@@ -305,6 +272,13 @@ def run_worker_process(
                 status = WorkerProcessStatus.MALFORMED_OUTPUT
                 protocol_error = f"invalid worker result: {type(exc).__name__}: {exc}"
         process_terminated = process.poll() is not None
+    except KeyboardInterrupt:
+        # Ctrl+C interrupts the controller, not the isolated worker group. Clean
+        # up that group before propagating cancellation; never turn it into a
+        # completion verdict or leave Codex running in the background.
+        if process is not None:
+            _terminate_process(process)
+        raise
     except (OSError, ValueError, BrokenPipeError) as exc:
         protocol_error = f"worker launch or protocol I/O failed: {type(exc).__name__}"
         if process is not None and process.poll() is None:

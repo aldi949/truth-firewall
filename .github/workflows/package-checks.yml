@@ -14,10 +14,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest, ubuntu-latest]
+        os: [windows-latest, ubuntu-latest, macos-15-intel, macos-15]
         python: ['3.11', '3.14']
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 20
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
@@ -28,7 +28,12 @@ jobs:
       - name: Install development tools (not product dependencies)
         run: python -m pip install build==1.6.1 twine==7.0.0 pipx==1.17.14 pytest==9.1.1
       - name: Existing verification tests
-        run: python -m pytest --basetemp "${{ runner.temp }}/tf-tests"
+        run: python -m pytest --basetemp "${{ runner.temp }}/tf-tests" --junitxml "${{ runner.temp }}/tf-tests.xml"
+      - name: Frozen adversarial verifier benchmark
+        run: |
+          python -c "import platform; print('runner platform:', platform.system(), platform.machine())"
+          python tools/run_adversarial.py --cases benchmarks/v02/cases.json --work "${{ runner.temp }}/tf-adversarial" --source src
+          python tools/check_benchmark_result.py "${{ runner.temp }}/tf-adversarial/results.json"
       - name: Build wheel and sdist
         run: python -m build
       - name: Validate metadata and archive contents
@@ -61,3 +66,12 @@ jobs:
           name: truth-firewall-${{ matrix.os }}-py${{ matrix.python }}
           path: dist/*
           if-no-files-found: error
+      - name: Independent test and benchmark evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: evidence-${{ matrix.os }}-py${{ matrix.python }}
+          path: |
+            ${{ runner.temp }}/tf-tests.xml
+            ${{ runner.temp }}/tf-adversarial/results.json
+          if-no-files-found: warn

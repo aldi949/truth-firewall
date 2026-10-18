@@ -1,0 +1,3 @@
+# Preserve exact bytes of the frozen benchmark on every CI operating system.
+benchmarks/v02/*.json -text whitespace=cr-at-eol
+tools/run_adversarial.py -text whitespace=cr-at-eol

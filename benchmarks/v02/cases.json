@@ -1,0 +1,547 @@
+{
+  "schema": 1,
+  "scope": "Development falsification set, not blind validation. Real TaskCompletionVerifier; no worker. Oracles execute current source independently of acceptance checks. UNKNOWN is separate from rejection.",
+  "cases": [
+    {
+      "id": "bounded-positive",
+      "original_task": "active.answer() must return integer 42.",
+      "files": {
+        "active.py": "def answer(): return 42\n"
+      },
+      "checks": [
+        {
+          "id": "behavior",
+          "kind": "black_box",
+          "path": "active.py",
+          "symbol": "answer",
+          "cases": [
+            [
+              [],
+              42
+            ]
+          ]
+        }
+      ],
+      "oracle_expected_complete": true,
+      "oracle": {
+        "path": "active.py",
+        "symbol": "answer",
+        "cases": [
+          [
+            [],
+            42
+          ]
+        ]
+      }
+    },
+    {
+      "id": "bounded-negative",
+      "original_task": "active.answer() must return integer 42.",
+      "files": {
+        "active.py": "def answer(): return 00\n"
+      },
+      "checks": [
+        {
+          "id": "behavior",
+          "kind": "black_box",
+          "path": "active.py",
+          "symbol": "answer",
+          "cases": [
+            [
+              [],
+              42
+            ]
+          ]
+        }
+      ],
+      "oracle_expected_complete": false,
+      "oracle": {
+        "path": "active.py",
+        "symbol": "answer",
+        "cases": [
+          [
+            [],
+            42
+          ]
+        ]
+      }
+    },
+    {
+      "id": "missing-function-passing-tests",
+      "original_task": "Implement active.answer() returning 42.",
+      "files": {
+        "active.py": "def unrelated(): return 42\n",
+        "test_active.py": "def test_placeholder(): assert True\n"
+      },
+      "checks": [
+        {
+          "id": "behavior",
+          "kind": "black_box",
+          "path": "active.py",
+          "symbol": "answer",
+          "cases": [
+            [
+              [],
+              42
+            ]
+          ]
+        }
+      ],
+      "oracle_expected_complete": false,
+      "oracle": {
+        "path": "active.py",
+        "symbol": "answer",
+        "cases": [
+          [
+            [],
+            42
+          ]
+        ]
+      }
+    },
+    {
+      "id": "preexisting-file",
+      "original_task": "Modify active.py so answer() returns 42.",
+      "files": {
+        "active.py": "def answer(): return 00\n"
+      },
+      "checks": [
+        {
+          "id": "file",
+          "kind": "file_exists",
+          "path": "active.py",
+          "expected": true
+        }
+      ],
+      "oracle_expected_complete": false,
+      "oracle": {
+        "path": "active.py",
+        "symbol": "answer",
+        "cases": [
+          [
+            [],
+            42
+          ]
+        ]
+      },
+      "limitation": "existence is not modification or behavior"
+    },
+    {
+      "id": "wrong-target",
+      "original_task": "In active.py, answer() must return 42.",
+      "files": {
+        "active.py": "def answer(): return 00\n",
+        "legacy.py": "def answer(): return 42\n"
+      },
+      "checks": [
+        {
+          "id": "behavior",
+          "kind": "black_box",
+          "path": "legacy.py",
+          "symbol": "answer",
+          "cases": [
+            [
+              [],
+              42
+            ]
+          ]
+        }
+      ],
+      "oracle_expected_complete": false,
+      "oracle": {
+        "path": "active.py",
+        "symbol": "answer",
+        "cases": [
+          [
+            [],
+            42
+          ]
+        ]
+      },
+      "limitation": "no arbitrary natural-language target inference"
+    },
+    {
+      "id": "narrow-examples",
+      "original_task": "Double any integer input, including 3.",
+      "files": {
+        "active.py": "def double(n): return 4 if n == 2 else 0\n",
+        "test_active.py": "def test_two():\n    assert True\n"
+      },
+      "checks": [
+        {
+          "id": "two",
+          "kind": "black_box",
+          "path": "active.py",
+          "symbol": "double",
+          "cases": [
+            [
+              [
+                2
+              ],
+              4
+            ]
+          ]
+        }
+      ],
+      "oracle_expected_complete": false,
+      "oracle": {
+        "path": "active.py",
+        "symbol": "double",
+        "cases": [
+          [
+            [
+              2
+            ],
+            4
+          ],
+          [
+            [
+              3
+            ],
+            6
+          ]
+        ]
+      },
+      "limitation": "broader obligation omitted"
+    },
+    {
+      "id": "disabled-tests",
+      "original_task": "active.answer() must return integer 42.",
+      "files": {
+        "active.py": "def answer(): return 00\n",
+        "test_active.py": "import unittest\n@unittest.skip(\"disabled\")\nclass TestActive(unittest.TestCase):\n def test_answer(self): self.fail()\n"
+      },
+      "checks": [
+        {
+          "id": "behavior",
+          "kind": "black_box",
+          "path": "active.py",
+          "symbol": "answer",
+          "cases": [
+            [
+              [],
+              42
+            ]
+          ]
+        }
+      ],
+      "oracle_expected_complete": false,
+      "oracle": {
+        "path": "active.py",
+        "symbol": "answer",
+        "cases": [
+          [
+            [],
+            42
+          ]
+        ]
+      }
+    },
+    {
+      "id": "stale-evidence-after-edit",
+      "original_task": "active.answer() must return integer 42.",
+      "files": {
+        "active.py": "def answer(): return 42\n"
+      },
+      "checks": [
+        {
+          "id": "behavior",
+          "kind": "black_box",
+          "path": "active.py",
+          "symbol": "answer",
+          "cases": [
+            [
+              [],
+              42
+            ]
+          ]
+        }
+      ],
+      "oracle_expected_complete": false,
+      "oracle": {
+        "path": "active.py",
+        "symbol": "answer",
+        "cases": [
+          [
+            [],
+            42
+          ]
+        ]
+      },
+      "after_verification_files": {
+        "active.py": "def answer(): return 00\n"
+      }
+    },
+    {
+      "id": "incomplete-contract",
+      "original_task": "Expose answer() and make it return integer 42.",
+      "files": {
+        "active.py": "def answer(): return 00\n"
+      },
+      "checks": [
+        {
+          "id": "api",
+          "kind": "python_function",
+          "path": "active.py",
+          "symbol": "answer",
+          "expected": []
+        }
+      ],
+      "oracle_expected_complete": false,
+      "oracle": {
+        "path": "active.py",
+        "symbol": "answer",
+        "cases": [
+          [
+            [],
+            42
+          ]
+        ]
+      },
+      "limitation": "API declaration omits mandatory behavior"
+    },
+    {
+      "id": "false-worker-claim",
+      "original_task": "active.answer() must return integer 42.",
+      "files": {
+        "active.py": "def answer(): return 00\n"
+      },
+      "checks": [
+        {
+          "id": "behavior",
+          "kind": "black_box",
+          "path": "active.py",
+          "symbol": "answer",
+          "cases": [
+            [
+              [],
+              42
+            ]
+          ]
+        }
+      ],
+      "oracle_expected_complete": false,
+      "oracle": {
+        "path": "active.py",
+        "symbol": "answer",
+        "cases": [
+          [
+            [],
+            42
+          ]
+        ]
+      },
+      "worker_claim": "DONE. All tests passed and all requirements are complete."
+    },
+    {
+      "id": "unsupported-requirement",
+      "original_task": "Make the code elegant.",
+      "files": {
+        "active.py": "def answer(): return 42\n"
+      },
+      "checks": [
+        {
+          "id": "quality",
+          "kind": "subjective_quality"
+        }
+      ],
+      "oracle_expected_complete": null,
+      "oracle": null
+    },
+    {
+      "id": "ambiguous-scope",
+      "original_task": "Return the right value for the unresolved input domain.",
+      "files": {
+        "active.py": "def answer(): return 42\n"
+      },
+      "checks": [
+        {
+          "id": "behavior",
+          "kind": "black_box",
+          "path": "active.py",
+          "symbol": "answer",
+          "cases": []
+        }
+      ],
+      "oracle_expected_complete": null,
+      "oracle": null
+    },
+    {
+      "id": "required-command-unsupported",
+      "original_task": "Run the mandatory independent command before completion.",
+      "files": {
+        "active.py": "def answer(): return 42\n"
+      },
+      "checks": [
+        {
+          "id": "command",
+          "kind": "required_command"
+        }
+      ],
+      "oracle_expected_complete": null,
+      "oracle": null
+    },
+    {
+      "id": "optional-unknown-control",
+      "original_task": "active.answer() must return integer 42; style is optional.",
+      "files": {
+        "active.py": "def answer(): return 42\n"
+      },
+      "checks": [
+        {
+          "id": "behavior",
+          "kind": "black_box",
+          "path": "active.py",
+          "symbol": "answer",
+          "cases": [
+            [
+              [],
+              42
+            ]
+          ]
+        },
+        {
+          "id": "style",
+          "kind": "subjective_quality",
+          "mandatory": false
+        }
+      ],
+      "oracle_expected_complete": true,
+      "oracle": {
+        "path": "active.py",
+        "symbol": "answer",
+        "cases": [
+          [
+            [],
+            42
+          ]
+        ]
+      }
+    },
+    {
+      "id": "stale-bytecode",
+      "original_task": "Current active.answer() must return integer 42.",
+      "files": {
+        "active.py": "def answer(): return 00\n"
+      },
+      "checks": [
+        {
+          "id": "behavior",
+          "kind": "black_box",
+          "path": "active.py",
+          "symbol": "answer",
+          "cases": [
+            [
+              [],
+              42
+            ]
+          ]
+        }
+      ],
+      "oracle_expected_complete": false,
+      "oracle": {
+        "path": "active.py",
+        "symbol": "answer",
+        "cases": [
+          [
+            [],
+            42
+          ]
+        ]
+      },
+      "precompile_files": {
+        "active.py": "def answer(): return 42\n"
+      }
+    },
+    {
+      "id": "nested-json-type",
+      "original_task": "Return an object whose ok value is JSON boolean true.",
+      "files": {
+        "active.py": "def answer(): return {'ok': 1}\n"
+      },
+      "checks": [
+        {
+          "id": "behavior",
+          "kind": "black_box",
+          "path": "active.py",
+          "symbol": "answer",
+          "cases": [
+            [
+              [],
+              {
+                "ok": true
+              }
+            ]
+          ]
+        }
+      ],
+      "oracle_expected_complete": false,
+      "oracle": {
+        "path": "active.py",
+        "symbol": "answer",
+        "cases": [
+          [
+            [],
+            {
+              "ok": true
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "fresh-bytecode-control",
+      "original_task": "Current active.answer() must return integer 42.",
+      "files": {
+        "active.py": "def answer(): return 42\n"
+      },
+      "checks": [
+        {
+          "id": "behavior",
+          "kind": "black_box",
+          "path": "active.py",
+          "symbol": "answer",
+          "cases": [
+            [
+              [],
+              42
+            ]
+          ]
+        }
+      ],
+      "oracle_expected_complete": true,
+      "oracle": {
+        "path": "active.py",
+        "symbol": "answer",
+        "cases": [
+          [
+            [],
+            42
+          ]
+        ]
+      },
+      "precompile_files": {
+        "active.py": "def answer(): return 42\n"
+      }
+    },
+    {
+      "id": "existence-only-positive",
+      "original_task": "The task only requires active.py to exist.",
+      "files": {
+        "active.py": "def answer(): return 00\n"
+      },
+      "checks": [
+        {
+          "id": "file",
+          "kind": "file_exists",
+          "path": "active.py",
+          "expected": true
+        }
+      ],
+      "oracle_expected_complete": true,
+      "oracle": {
+        "file_exists": "active.py"
+      }
+    }
+  ]
+}

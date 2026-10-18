@@ -60,8 +60,9 @@ def check(dist: Path, source: Path) -> dict:
                 files[name] = archive.extractfile(member).read()
     required = {"src/" + name: content for name, content in intended.items()}
     assert all(files.get(name) == content for name, content in required.items()), "sdist source/data mismatch"
-    source_files = {p.relative_to(source).as_posix(): p.read_bytes() for folder in ("tests", "tools", "docs")
-                    for p in (source / folder).rglob("*") if p.is_file() and p.suffix in {".py", ".md"}}
+    source_files = {p.relative_to(source).as_posix(): p.read_bytes()
+                    for folder in ("tests", "tools", "docs", "benchmarks")
+                    for p in (source / folder).rglob("*") if p.is_file() and p.suffix in {".py", ".md", ".json"}}
     assert all(files.get(name) == content for name, content in source_files.items()), "sdist checks/docs mismatch"
     allowed = set(required) | set(source_files) | {
         "pyproject.toml", "MANIFEST.in", "LICENSE", "README.md", "QUICKSTART.md", "CONTRIBUTING.md",

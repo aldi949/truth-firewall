@@ -68,8 +68,8 @@ def test_unreviewed_concrete_starter_blocks_and_skips_worker(tmp_path, monkeypat
     (tmp_path / "output.py").write_text("", encoding="utf-8")
     spec = _init(tmp_path, monkeypatch, "output.py")
     assert _decision(tmp_path, spec) == CompletionDecision.HUMAN_REQUIRED
-    monkeypatch.setattr("truth_firewall.pilot.shutil.which",
-                        lambda _: (_ for _ in ()).throw(AssertionError("preflight reached Codex")))
+    monkeypatch.setattr("truth_firewall.pilot.discover_codex",
+                        lambda: (_ for _ in ()).throw(AssertionError("preflight reached Codex")))
     monkeypatch.setattr("truth_firewall.pilot.run_supervised_task",
                         lambda *a, **kw: (_ for _ in ()).throw(AssertionError("worker launched")))
     assert run_pilot(str(spec)) == 2
@@ -182,8 +182,8 @@ def test_post_activation_edit_blocks_before_worker(tmp_path, monkeypatch, capsys
         changed["conditions"][1]["exists"] = False
     spec.write_text(json.dumps(changed), encoding="utf-8")
     assert _decision(tmp_path, spec) == CompletionDecision.HUMAN_REQUIRED
-    monkeypatch.setattr("truth_firewall.pilot.shutil.which",
-                        lambda _: (_ for _ in ()).throw(AssertionError("Codex lookup reached")))
+    monkeypatch.setattr("truth_firewall.pilot.discover_codex",
+                        lambda: (_ for _ in ()).throw(AssertionError("Codex lookup reached")))
     monkeypatch.setattr("truth_firewall.pilot.run_supervised_task",
                         lambda *a, **kw: (_ for _ in ()).throw(AssertionError("worker launched")))
     assert run_pilot(str(spec), attempts=1) == 2
@@ -219,8 +219,8 @@ def test_explicit_spec_review_integrity_and_missing_digest(tmp_path, monkeypatch
     data.pop("acceptance_digest")
     spec.write_text(json.dumps(data), encoding="utf-8")
     assert _decision(tmp_path, spec) == CompletionDecision.HUMAN_REQUIRED
-    monkeypatch.setattr("truth_firewall.pilot.shutil.which",
-                        lambda _: (_ for _ in ()).throw(AssertionError("Codex lookup reached")))
+    monkeypatch.setattr("truth_firewall.pilot.discover_codex",
+                        lambda: (_ for _ in ()).throw(AssertionError("Codex lookup reached")))
     assert main(["run", "--spec", str(spec), "--attempts", "1"]) == 2
     assert "activate --spec" in capsys.readouterr().out
 
@@ -234,7 +234,7 @@ def test_changed_reviewed_spec_fails_review_before_schema_setup(tmp_path, monkey
     else:
         data["conditions"] = []
     spec.write_text(json.dumps(data), encoding="utf-8")
-    monkeypatch.setattr("truth_firewall.pilot.shutil.which",
-                        lambda _: (_ for _ in ()).throw(AssertionError("Codex lookup reached")))
+    monkeypatch.setattr("truth_firewall.pilot.discover_codex",
+                        lambda: (_ for _ in ()).throw(AssertionError("Codex lookup reached")))
     assert run_pilot(str(spec), attempts=1) == 2
     assert "review is invalid" in capsys.readouterr().out
