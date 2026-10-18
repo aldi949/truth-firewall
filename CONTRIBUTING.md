@@ -1,10 +1,10 @@
 # Contributing
 
-Truth Firewall is an early Windows pilot for bounded local Python tasks. Keep original task requirements, acceptance checks, evidence, and final verdicts distinct. Add a regression test when changing verification behavior. Do not treat worker prose or passing worker-owned tests as completion authority.
+The published 0.1.0 release is a Windows pilot for bounded local Python tasks. The V0.2 candidate adds platform support that must be checked on hosted runners. Keep original task requirements, acceptance checks, evidence, and final verdicts distinct. Add a regression test when changing verification behavior. Do not treat worker prose or passing worker-owned tests as completion authority.
 
 ## Local checks
 
-For development, clone the source and use a virtual environment. Normal users can use the pipx source/artifact installation described in [QUICKSTART.md](QUICKSTART.md); the PyPI command remains planned until publication and public verification.
+For development, clone the source and use a virtual environment. Users can install the published 0.1.0 release with `pipx install truth-firewall`. Candidate features on this branch require a local candidate install until a later release is explicitly approved and published.
 
 ```powershell
 git clone https://github.com/aldi949/truth-firewall.git

@@ -4,21 +4,43 @@ from __future__ import annotations
 
 import json
 import os
-import shutil
 import sys
 import tempfile
 from pathlib import Path
 from uuid import uuid4
 
-from truth_firewall.completion import AcceptanceCondition, TaskCompletionContract, acceptance_content_digest
-from truth_firewall.lifecycle import AttemptRecord, TaskRun, TerminalOutcome, run_supervised_task
+from truth_firewall.completion import (
+    AcceptanceCondition,
+    CompletionObligation,
+    TaskCompletionContract,
+    acceptance_content_digest,
+)
+from truth_firewall.lifecycle import TaskRun, TerminalOutcome, run_supervised_task
+from truth_firewall.platform_runtime import discover_codex
 from truth_firewall.supervised_worker import WorkerProcessSpec
 
 
+def _unique_json_object(pairs: list[tuple[str, object]]) -> dict:
+    result = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValueError(f"duplicate JSON field: {key}")
+        result[key] = value
+    return result
+
+
+def _known_fields(row: dict, allowed: set[str], context: str) -> None:
+    unknown = set(row) - allowed
+    if unknown:
+        raise ValueError(f"unsupported {context} field(s): {', '.join(sorted(unknown))}")
+
+
 def _load_spec(path: Path) -> tuple[dict, TaskCompletionContract]:
-    data = json.loads(path.read_text(encoding="utf-8"))
+    data = json.loads(path.read_text(encoding="utf-8"), object_pairs_hook=_unique_json_object)
     if not isinstance(data, dict):
         raise ValueError("task spec must be a JSON object")
+    _known_fields(data, {"task_id", "task_type", "task", "conditions", "acceptance_review",
+                         "acceptance_digest", "onboarding_note", "obligations"}, "task")
     task = data.get("task")
     task_type = data.get("task_type", "python")
     task_id = data.get("task_id", "pilot-task")
@@ -42,8 +64,16 @@ def _load_spec(path: Path) -> tuple[dict, TaskCompletionContract]:
         symbol = row.get("symbol", "")
         if not isinstance(condition_id, str) or not condition_id.strip():
             raise ValueError(f"condition {index + 1} needs a nonempty id")
-        if not isinstance(kind, str) or kind not in {"file_exists", "python_function", "black_box"}:
+        supported_kinds = {"file_exists", "file_changed", "python_function", "black_box", "unittest"}
+        if not isinstance(kind, str) or kind not in supported_kinds:
             raise ValueError(f"condition {condition_id!r} has unsupported kind {kind!r}")
+        common_fields = {"id", "kind", "path", "description"}
+        kind_fields = {
+            "file_exists": {"exists"}, "file_changed": {"baseline_sha256"},
+            "python_function": {"symbol", "parameters"},
+            "black_box": {"symbol", "cases"}, "unittest": {"suite"},
+        }
+        _known_fields(row, common_fields | kind_fields[kind], f"condition {condition_id!r}")
         if not isinstance(file_path, str) or not file_path:
             raise ValueError(f"condition {condition_id!r} needs a repository-relative path")
         expected = row.get("expected")
@@ -52,6 +82,11 @@ def _load_spec(path: Path) -> tuple[dict, TaskCompletionContract]:
             expected = row.get("exists", True)
             if type(expected) is not bool:
                 raise ValueError(f"condition {condition_id!r} exists must be true or false")
+        elif kind in {"file_changed", "unittest"}:
+            # Detailed evidence readiness is checked fail-closed by the verifier.
+            expected = row.get("baseline_sha256") if kind == "file_changed" else row.get("suite")
+            if kind == "unittest" and isinstance(expected, dict):
+                _known_fields(expected, {"sha256", "test_ids"}, f"condition {condition_id!r} suite")
         elif kind == "python_function":
             parameters = row.get("parameters")
             if not isinstance(symbol, str) or not symbol.isidentifier():
@@ -70,6 +105,7 @@ def _load_spec(path: Path) -> tuple[dict, TaskCompletionContract]:
                 if (not isinstance(case, dict) or not isinstance(case.get("args"), list)
                         or "expected" not in case):
                     raise ValueError(f"condition {condition_id!r} case {case_number + 1} needs args and expected")
+                _known_fields(case, {"args", "expected"}, f"condition {condition_id!r} case {case_number + 1}")
                 parsed_cases.append((tuple(case["args"]), case["expected"]))
             cases = tuple(parsed_cases)
         conditions.append(AcceptanceCondition(condition_id, kind, file_path, symbol, expected, cases, True))
@@ -78,10 +114,30 @@ def _load_spec(path: Path) -> tuple[dict, TaskCompletionContract]:
     if review is None:
         note = data.get("onboarding_note", "")
         review = ("unreviewed" if isinstance(note, str) and note.startswith(
-            ("EDITABLE TEMPLATE:", "STARTER CHECK ONLY:")) else "legacy")
+            ("EDITABLE TEMPLATE:", "STARTER CHECK ONLY:", "GUIDED CHECKS:")) else "legacy")
+    obligations = []
+    if "obligations" in data:
+        raw_obligations = data["obligations"]
+        if not isinstance(raw_obligations, list) or not raw_obligations:
+            raise ValueError("explicit obligations must be a nonempty list")
+        for row in raw_obligations:
+            if isinstance(row, dict):
+                _known_fields(row, {"id", "text", "scope", "coverage", "condition_ids",
+                                    "target_path", "mandatory"}, "obligation")
+            if (not isinstance(row, dict) or not all(isinstance(row.get(key), str) and row[key].strip()
+                    for key in ("id", "text", "scope", "coverage"))
+                    or not isinstance(row.get("condition_ids"), list)
+                    or not all(isinstance(key, str) and key for key in row["condition_ids"])
+                    or type(row.get("mandatory", True)) is not bool
+                    or not isinstance(row.get("target_path", ""), str)):
+                raise ValueError("malformed explicit obligation")
+            obligations.append(CompletionObligation(row["id"], row["text"], row["scope"],
+                                                   tuple(row["condition_ids"]), row["coverage"],
+                                                   row.get("target_path", ""), row.get("mandatory", True)))
     contract = TaskCompletionContract(task_id, task, tuple(conditions), review,
                                       data.get("acceptance_digest"),
-                                      acceptance_content_digest(data) if review == "reviewed" else None)
+                                      acceptance_content_digest(data) if review == "reviewed" else None,
+                                      tuple(obligations))
     return data, contract
 
 
@@ -152,7 +208,10 @@ def _review_required(summary_path: Path, *, run_id: str, task_type: str, mandato
 
 
 def _print_result(run: TaskRun, contract: TaskCompletionContract, summary_path: Path) -> int:
-    display_outcome = "ERROR" if run.terminal_outcome in {TerminalOutcome.ERROR, TerminalOutcome.TIMEOUT} else run.terminal_outcome.value
+    display_outcome = (
+        "ERROR" if run.terminal_outcome in {TerminalOutcome.ERROR, TerminalOutcome.TIMEOUT}
+        else run.terminal_outcome.value
+    )
     print(f"\n{display_outcome}")
     print(f"Attempts used: {len(run.history)}")
     if run.terminal_outcome == TerminalOutcome.VERIFIED_DONE:
@@ -176,7 +235,8 @@ def _print_result(run: TaskRun, contract: TaskCompletionContract, summary_path: 
                       (f" | {note}" if note else ""))
         if not final or not (final.unknown_conditions or final.failed_conditions):
             print(f"- {run.terminal_reason or 'one or more mandatory checks remain unproven'}")
-        print("Human action needed: review the listed requirement(s), resolve any ambiguity or implementation gap, then start a new run.")
+        print("Human action needed: review the listed requirement(s), resolve any ambiguity or implementation gap, "
+              "then start a new run.")
     else:
         detail = run.history[-1].error if run.history else run.terminal_reason
         category = _error_category(run) or "runner_error"
@@ -219,20 +279,13 @@ def run_pilot(spec_value: str, *, attempts: int = 3) -> int:
                 spec_value=spec_value,
                 reason=("acceptance_review_invalid" if contract.acceptance_review == "reviewed"
                         else "acceptance_contract_unreviewed"))
-        node = shutil.which("node.exe") or shutil.which("node")
-        if not node:
-            raise RuntimeError("Node.js was not found on PATH; install/configure Codex CLI first")
-        appdata = os.environ.get("APPDATA", str(Path.home() / "AppData" / "Roaming"))
-        codex_js = Path(os.environ.get("TRUTH_FIREWALL_CODEX_JS", "")) if os.environ.get("TRUTH_FIREWALL_CODEX_JS") else (
-            Path(appdata) / "npm" / "node_modules" / "@openai" / "codex" / "bin" / "codex.js")
-        if not codex_js.is_file():
-            raise RuntimeError("Codex CLI JavaScript entry point was not found; install Codex CLI for this user")
+        runtime = discover_codex()
         private_root = Path(tempfile.gettempdir()) / "truth-firewall-controller" / run_id
         raw_root = private_root / "codex-invocations"
         raw_root.mkdir(parents=True)
         env = _worker_environment()
-        env.update({"TF_PILOT_RAW_ROOT": str(raw_root.resolve()), "TF_CODEX_NODE": str(Path(node).resolve()),
-                    "TF_CODEX_JS": str(codex_js.resolve())})
+        env.update({"TF_PILOT_RAW_ROOT": str(raw_root.resolve()),
+                    "TF_CODEX_COMMAND": json.dumps(runtime.command)})
         worker = Path(__file__).with_name("codex_worker.py").resolve()
         spec = WorkerProcessSpec((sys.executable, "-I", str(worker)), timeout_seconds=320,
                                  max_output_bytes=1_000_000, environment=env)

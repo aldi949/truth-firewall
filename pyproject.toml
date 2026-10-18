@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "truth-firewall"
-version = "0.1.0"
+version = "0.2.0rc1"
 description = "Independently verify bounded local Python coding tasks completed by Codex."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -16,6 +16,8 @@ classifiers = [
     "Development Status :: 3 - Alpha",
     "Environment :: Console",
     "Operating System :: Microsoft :: Windows",
+    "Operating System :: MacOS",
+    "Operating System :: POSIX :: Linux",
     "Programming Language :: Python :: 3 :: Only",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
