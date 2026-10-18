@@ -1,24 +1,16 @@
 # Quickstart: local Python task with Codex
 
-Use **Windows PowerShell** for real tasks. Package installation and Codex setup are separate.
+Published **0.1.0 is available on [PyPI](https://pypi.org/project/truth-firewall/0.1.0/)**. Use **Windows PowerShell** for authenticated Codex tasks in this release. Package installation and Codex setup are separate.
 
 ## Package installation
 
-**Planned command after PyPI publication — not currently a verified public PyPI install:**
+With **Python 3.11+ and pipx** installed, run:
 
 ```powershell
 pipx install truth-firewall
 ```
 
-Prerequisites: Python 3.11+ and pipx on PATH. Installing the package supplies neither Python nor pipx. If needed, install pipx with `py -3.11 -m pip install --user pipx`, run `py -3.11 -m pipx ensurepath`, and reopen PowerShell. Substitute your installed supported Python version. Check `pipx --version` before continuing.
-
-Before publication, the available GitHub installation requires Git and uses the reviewed published commit:
-
-```powershell
-pipx install "git+https://github.com/aldi949/truth-firewall.git@95d0fc00de59134527af979de6f07eda1bd65d8a"
-```
-
-For a locally built candidate wheel instead, use `pipx install .\truth_firewall-0.1.0-py3-none-any.whl`. These are actual source/artifact installs, not proof that `pipx install truth-firewall` resolves to this project on PyPI. Publication instructions and gates are in [docs/PUBLISHING.md](docs/PUBLISHING.md).
+Installing the package supplies neither Python nor pipx. If needed on Windows, install pipx with `py -3.11 -m pip install --user pipx`, run `py -3.11 -m pipx ensurepath`, and reopen PowerShell. Substitute your installed supported Python version. Check `pipx --version` before continuing.
 
 From any working directory, check the installed executable:
 
@@ -28,7 +20,7 @@ truth-firewall --version
 truth-firewall demo
 ```
 
-The offline demo uses bundled fixtures and labels them **NOT LIVE PRODUCT ACCURACY**. It needs no Node.js or Codex authentication. pipx upgrade and uninstall commands after publication are `pipx upgrade truth-firewall` and `pipx uninstall truth-firewall`. For a newer local wheel, use `pipx install --force .\path\to\new.whl`; `pipx upgrade` of a wheel-pinned installation does not switch it to PyPI.
+The offline demo uses bundled fixtures and labels them **NOT LIVE PRODUCT ACCURACY**. It needs no Node.js or Codex authentication. Upgrade with `pipx upgrade truth-firewall` and uninstall with `pipx uninstall truth-firewall`.
 
 ## First-time Codex setup
 
