@@ -1,6 +1,16 @@
 # Your coding agent says “DONE”. That doesn’t mean the job is done.
 
-**Truth Firewall won’t accept `DONE` until the work is independently verified.**
+Install the published [Truth Firewall 0.1.0 package](https://pypi.org/project/truth-firewall/0.1.0/):
+
+```powershell
+pipx install truth-firewall
+truth-firewall --version
+truth-firewall demo
+```
+
+You need **Python 3.11+ and pipx** first. The demo runs offline without a Codex account. Authenticated Codex task execution in published 0.1.0 is a **Windows-only pilot**; macOS and Linux Codex end-to-end support is not yet established. See [QUICKSTART.md](QUICKSTART.md) for setup.
+
+**Truth Firewall checks your acceptance conditions independently before accepting `DONE`.**
 
 Your coding agent says:
 
@@ -38,28 +48,9 @@ VERIFIED_DONE    REJECT_DONE       HUMAN_REQUIRED
               Codex keeps working
 ```
 
-## Install the package
+## Installation details
 
-**Planned PyPI command — not published or verified from PyPI yet:**
-
-```powershell
-pipx install truth-firewall
-```
-
-Have **Python 3.11+ and pipx** installed first. On Windows, you can install pipx with `py -3.11 -m pip install --user pipx`, run `py -3.11 -m pipx ensurepath`, and reopen PowerShell. Use an installed supported Python version in those commands. Installing Truth Firewall does not install Python, pipx, Node.js, or Codex, and does not sign you into Codex.
-
-Until PyPI publication, use Git plus the reviewed GitHub revision, or install a locally built wheel:
-
-```powershell
-pipx install "git+https://github.com/aldi949/truth-firewall.git@95d0fc00de59134527af979de6f07eda1bd65d8a"
-# Local release candidate, after building/downloading the actual artifact:
-pipx install .\truth_firewall-0.1.0-py3-none-any.whl
-truth-firewall --help
-truth-firewall --version
-truth-firewall demo
-```
-
-The offline demo needs no Codex account and explicitly labels its fixtures as demonstrations, not live accuracy. Package installation is isolated by pipx; the real task runner is currently a **Windows pilot**. See [QUICKSTART.md](QUICKSTART.md) for setup and [publication gates](docs/PUBLISHING.md) for the unpublished candidate. Do not use the planned PyPI command until a release has been published and verified to belong to this repository.
+On Windows, if pipx is not installed, run `py -3.11 -m pip install --user pipx`, then `py -3.11 -m pipx ensurepath` and reopen PowerShell. Substitute your installed supported Python version. Installing Truth Firewall does not install Python, pipx, Node.js, or Codex, and does not sign you into Codex. The offline demo labels its fixtures as demonstrations, not live accuracy. See [QUICKSTART.md](QUICKSTART.md) for setup.
 
 ## First-time Codex setup
 
